@@ -46,7 +46,6 @@ MyProcess::MyProcess(int argc, char* argv[])
         cout << "Can't create process. Error " << GetLastError();
     }
 
-
     HANDLE namedPipe = CreateNamedPipe(TEXT("\\\\.\\pipe\\Pipe"),
         PIPE_ACCESS_DUPLEX | PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
         PIPE_WAIT,
@@ -78,11 +77,10 @@ MyProcess::MyProcess(int argc, char* argv[])
 
     cout << "x^2 = " << number << endl;
 
-    Sleep(5000);
+    getch();
 
-    CloseHandle(namedPipe);
     CloseHandle(processInfo.hProcess);
-    CloseHandle(processInfo.hThread);
+    CloseHandle(namedPipe);
 #endif
 
 #ifdef linux
@@ -122,8 +120,6 @@ MyProcess::MyProcess(int argc, char* argv[])
         read(fileDescriptor[0], &number, sizeof(double));
         close(fileDescriptor[0]);
         cout << "x^2 = " << number << endl;
-
-        sleep(5);
     }
 
 #endif
