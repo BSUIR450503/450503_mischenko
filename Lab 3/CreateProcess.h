@@ -40,10 +40,10 @@ MyProcess::MyProcess(char* name)
     startupInfo.cb = sizeof(startupInfo);
     ZeroMemory(&processInfo, sizeof(processInfo));
 
-    char commandLine[16] = "-n 1";
+    char commandLine[16] = "-n";
 
-    if (!CreateProcess(name,
-        commandLine,
+    if (!CreateProcess(NULL,
+        name,
         NULL,
         NULL,
         FALSE,

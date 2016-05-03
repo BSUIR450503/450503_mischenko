@@ -193,16 +193,13 @@ int main(int argc, char *argv[])
             serverSemaphore.sem_op = 0;
             serverSemaphore.sem_flg = 0;
 
-            semop(semaphoreId, &serverSemaphore, 1);
-
             printf("Server process: ");
 
             while (1) {
                 char *message = NULL;
                 message = (char*)malloc(1024 * sizeof(char));
 
-                if (semop(semaphoreId, &serverSemaphore, 1) < 0)
-                    printf("Can't initialize server semaphore\n");
+                semop(semaphoreId, &serverSemaphore, 1);
 
                 printf("\nInput message to client: ");
                 fflush(stdin);
@@ -257,22 +254,15 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-        printf("Client process: ");
-
-        clientSemaphore.sem_num = 0;
-        clientSemaphore.sem_op = 1;
-        clientSemaphore.sem_flg = 0;
-        semop(semaphoreId, &clientSemaphore, 1);
-
-        clientSemaphore.sem_op = -1;
-        semop(semaphoreId, &clientSemaphore, 1);
-        clientSemaphore.sem_op = -2;
-
         if ((sharedMemoryId = shmget(key, 1024, 0)) == -1)
         {
             printf("Shmget error");
             exit(1);
         }
+
+        printf("Client process: ");
+
+        clientSemaphore.sem_op = -2;
 
         while (1) {
             char *message = NULL;
