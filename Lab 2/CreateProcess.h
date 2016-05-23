@@ -119,7 +119,7 @@ void print(int number)
 #ifdef _WIN32
         Sleep(50);
 #elif __linux__
-        usleep(1000);
+        usleep(50000);
         fflush(stdout);
         refresh();
 #endif
