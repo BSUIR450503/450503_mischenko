@@ -54,10 +54,11 @@ int main(int argc, char *argv[])
     clear();
     noecho();
     refresh();
+    nodelay(stdscr, TRUE);
 
     while (1)
     {
-        key = getchar();
+        key = getch();
         usleep(1000);
         fflush(stdout);
         refresh();
