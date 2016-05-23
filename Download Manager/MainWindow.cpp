@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setCentralWidget(ui->downloadsTable);
 
     connect(ui->addButton, SIGNAL(triggered(bool)), this, SLOT(addDownload()));
+    connect(ui->addToolButton, SIGNAL(triggered(bool)), this, SLOT(addDownload()));
     connect(ui->aboutButton, SIGNAL(triggered(bool)), this, SLOT(about()));
     connect(ui->exitButton, SIGNAL(triggered(bool)), this, SLOT(close()));
 }
