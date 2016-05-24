@@ -35,8 +35,8 @@ class MyThread
 {
 private:
     HANDLE threadHandle;
-    CRITICAL_SECTION sectionForPrint;
-    CRITICAL_SECTION sectionForClose;
+    int printFlag;
+    int closeFlag;
 public:
     MyThread(int);
     int threadIndex;
@@ -52,8 +52,8 @@ MyThread::MyThread(int number)
 {
     threadIndex = number;
 
-    InitializeCriticalSection(&sectionForPrint);
-    InitializeCriticalSection(&sectionForClose);
+    int printFlag = 0;
+    int closeFlag = 0;
 
     if (number == 1)
     {
@@ -63,16 +63,19 @@ MyThread::MyThread(int number)
     threadHandle = CreateThread(NULL, 100, print, (void*)this, 0, 0);
 }
 
-void MyThread::startPrint() {
-    EnterCriticalSection(&sectionForPrint);
+void MyThread::startPrint() 
+{
+    printFlag = 1;
 }
 
-void MyThread::endPrint() {
-    LeaveCriticalSection(&sectionForPrint);
+void MyThread::endPrint() 
+{
+    printFlag = 0;
     LeaveCriticalSection(&sectionForExecute);
 }
 
-bool MyThread::canPrint() {
+bool MyThread::canPrint() 
+{
     if (TryEnterCriticalSection(&sectionForExecute) == 0)
         return false;
 
@@ -80,23 +83,26 @@ bool MyThread::canPrint() {
     return true;
 }
 
-bool MyThread::isWaitingForPrint() {
-    if (TryEnterCriticalSection(&sectionForPrint) == 0)
+bool MyThread::isWaitingForPrint() 
+{
+    if (printFlag == 1)
         return false;
 
-    LeaveCriticalSection(&sectionForPrint);
+    printFlag = 0;
     return true;
 }
 
-void MyThread::closeThread() {
-    EnterCriticalSection(&sectionForClose);
+void MyThread::closeThread() 
+{
+    closeFlag = 1;
 }
 
-bool MyThread::isClose() {
-    if (TryEnterCriticalSection(&sectionForClose) == 0)
+bool MyThread::isClose() 
+{
+    if (closeFlag == 1)
         return true;
 
-    LeaveCriticalSection(&sectionForClose);
+    closeFlag = 0;
     return false;
 }
 
@@ -146,8 +152,8 @@ class MyThread
 {
 private:
     pthread_t* thread = new pthread_t();
-    pthread_mutex_t* printMutex = new pthread_mutex_t();
-    pthread_mutex_t* closeMutex = new pthread_mutex_t();
+    int printFlag;
+    int closeFlag;
 public:
     MyThread(int);
     int threadIndex;
@@ -163,9 +169,8 @@ MyThread::MyThread(int number)
 {
     threadIndex = number;
 
-    pthread_mutex_init(printMutex, 0);
-    pthread_mutex_lock(printMutex);
-    pthread_mutex_init(closeMutex, 0);
+    int printFlag = 0;
+    int closeFlag = 0;
 
     if (number == 1)
     {
@@ -175,16 +180,19 @@ MyThread::MyThread(int number)
     pthread_create(thread, NULL, print, (void*)this);
 }
 
-void MyThread::startPrint() {
-    pthread_mutex_unlock(printMutex);
+void MyThread::startPrint() 
+{
+    printFlag = 1;
 }
 
-void MyThread::endPrint() {
-    pthread_mutex_lock(printMutex);
+void MyThread::endPrint() 
+{
+    printFlag = 0;
     pthread_mutex_unlock(executeMutex);
 }
 
-bool MyThread::canPrint() {
+bool MyThread::canPrint() 
+{
     if (pthread_mutex_trylock(executeMutex) != 0)
         return false;
 
@@ -192,23 +200,26 @@ bool MyThread::canPrint() {
     return true;
 }
 
-bool MyThread::isWaitingForPrint() {
-    if (pthread_mutex_trylock(printMutex) != 0)
-        return true;
+bool MyThread::isWaitingForPrint() 
+{
+    if (printFlag == 1)
+        return false;
 
-    pthread_mutex_unlock(printMutex);
-    return false;
+    printFlag = 0;
+    return true;
 }
 
-void MyThread::closeThread() {
-    pthread_mutex_lock(closeMutex);
+void MyThread::closeThread() 
+{
+    closeFlag = 1;
 }
 
-bool MyThread::isClose() {
-    if (pthread_mutex_trylock(closeMutex) != 0)
+bool MyThread::isClose() 
+{
+    if (closeFlag == 1)
         return true;
 
-    pthread_mutex_unlock(closeMutex);
+    closeFlag = 0;
     return false;
 }
 
