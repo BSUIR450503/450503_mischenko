@@ -9,41 +9,19 @@ Download::Download(Ui::MainWindow *ui, QObject *parent) :
     this->ui = ui;
 }
 
-void Download::resetConnections()
-{
-    disconnect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(downloadProgress(qint64, qint64)));
-    connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(downloadProgress(qint64, qint64)));
-}
-
-bool Download::checkFile(const QString &fileName)
-{
-    if(QFile::exists(fileName))
-    {
-        if(QMessageBox::question(0, tr("Download Manager"), tr("There already exists a file called %1 in " "the current directory. Overwrite?").arg(fileName), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No)
-            return false;
-
-        QFile::remove(fileName);
-    }
-
-    return true;
-}
-
 void Download::run(const QUrl &url, const QString &fileName)
 {
-    if(isRequestValid(url))
-    {
-        if(isSchemeValid(url))
-        {
+    if(isRequestValid(url)) {
+        if(isSchemeValid(url)) {
             if(!checkFile(fileName))
                 return;
 
             this->fileName = fileName;
-            init();
+            initTableView();
 
             QFileInfo fileInfo(fileName);
 
-            if(QDir().exists(fileInfo.path()))
-            {
+            if(QDir().exists(fileInfo.path())) {
                 file.setFileName(fileName);
 
                 if(!file.isOpen())
@@ -62,6 +40,52 @@ void Download::run(const QUrl &url, const QString &fileName)
         QMessageBox::critical(0, tr("Error"),  tr("This URL is not valid, please try again."), QMessageBox::Ok);
 }
 
+void Download::get(const QUrl &url)
+{
+    if(!url.isEmpty()) {
+        request.setUrl(QUrl());
+        disconnect(this, SIGNAL(finished(QNetworkReply*)), 0, 0);
+
+        request.setUrl(url);
+        reply = QNetworkAccessManager::get(request);
+
+        disconnect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
+        connect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
+        connect(this, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyFinished(QNetworkReply*)));
+
+        reconnectErrorHandlers();
+    }
+}
+
+void Download::stop()
+{
+    if(reply->isRunning())
+        reply->abort();
+
+    if(file.isOpen())
+        file.close();
+
+    if(file.exists())
+        file.remove();
+
+    disconnect(speedTimer, SIGNAL(timeout()), this, SLOT(updateTableView()));
+    speedTimer->stop();
+    ui->downloadsTable->removeRow(downloadIndex);
+}
+
+void Download::cancel()
+{
+    if(reply->isRunning())
+        reply->abort();
+
+    if(file.isOpen())
+        file.close();
+
+    disconnect(speedTimer, SIGNAL(timeout()), this, SLOT(updateTableView()));
+    speedTimer->stop();
+    ui->downloadsTable->removeRow(downloadIndex);
+}
+
 bool Download::isRequestValid(const QUrl &url)
 {
     return  url.isValid();
@@ -78,77 +102,66 @@ bool Download::isSchemeValid(const QUrl &url)
     return valid;
 }
 
-void Download::replyFinished(QNetworkReply *reply)
+bool Download::checkFile(const QString &fileName)
 {
-    if(file.isOpen())
-        file.close();
+    if(QFile::exists(fileName)) {
+        if(QMessageBox::question(0, tr("Download Manager"),
+                                 tr("There already exists a file called %1 in "
+                                    "the current directory. Overwrite?").arg(fileName),
+                                 QMessageBox::Yes | QMessageBox::No,
+                                 QMessageBox::No) == QMessageBox::No)
+            return false;
 
-    if(reply->error() == QNetworkReply::NoError)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(tr("Download successfully comleted."));
-        msgBox.exec();
+        QFile::remove(fileName);
     }
+
+    return true;
 }
 
 void Download::replyReadyRead()
 {
     QByteArray bytes = reply->readAll();
 
-    if(!bytes.isEmpty())
-    {
+    if(!bytes.isEmpty()) {
         qint64 val = file.write(bytes);
-
         if(val > 0)
             file.flush();
     }
 }
 
-void Download::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+void Download::replyFinished(QNetworkReply *reply)
 {
-    this->bytesReceived = bytesReceived;
-    this->bytesTotal = bytesTotal;
-
-    if(!speedTimer->isActive())
-    {
-        speedTimer->start(interval);
-    }
-}
-
-void Download::cancel()
-{
-    if(reply->isRunning())
-        reply->abort();
-
     if(file.isOpen())
         file.close();
 
-    if(file.exists())
-        file.remove();
+    if(reply->error() == QNetworkReply::NoError) {
+        disconnect(this, SIGNAL(finished(QNetworkReply*)), 0, 0);
+        speedTimer->stop();
+        ui->downloadsTable->setItem(downloadIndex, 1, new QTableWidgetItem
+                                    (QString::number(bytesTotal/1048576., 'f', 2) + " Mb"));
+        ui->downloadsTable->setItem(downloadIndex, 2,new QTableWidgetItem
+                                    (QString::number(bytesTotal/1048576., 'f', 2) + " Mb"));
+        ui->downloadsTable->setItem(downloadIndex, 3, new QTableWidgetItem
+                                    (QString("Finished")));
+        ui->downloadsTable->setItem(downloadIndex, 4, new QTableWidgetItem
+                                    (QString("")));
+        ui->downloadsTable->setItem(downloadIndex, 5,new QTableWidgetItem
+                                    (QString("")));
+    }
 }
 
 void Download::authenticationRequired(QNetworkReply*, QAuthenticator*)
 {
     QMessageBox::critical(0, tr("Authentication"),  tr("Authentication required. This feature is not supported."), QMessageBox::Ok);
-    cancel();
+    stop();
 }
 
-void Download::get(const QUrl &url)
+void Download::resetConnections()
 {
-    if(!url.isEmpty())
-    {
-        request.setUrl(QUrl());
-        disconnect(this, SIGNAL(finished(QNetworkReply*)), 0, 0);
-
-        request.setUrl(url);
-        reply = QNetworkAccessManager::get(request);
-
-        connect(this, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyFinished(QNetworkReply*)));
-        disconnect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
-        connect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
-
-        reconnectErrorHandlers();
-    }
+    disconnect(reply, SIGNAL(downloadProgress(qint64, qint64)),
+               this, SLOT(updateProgress(qint64, qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64, qint64)),
+            this, SLOT(updateProgress(qint64, qint64)));
 }
 
 void Download::reconnectErrorHandlers()
@@ -173,7 +186,7 @@ void Download::error(QNetworkReply::NetworkError error)
         QMessageBox::critical(0, tr("Error"),  tr("A network error occured. Please try again."), QMessageBox::Ok);
 }
 
-void Download::init()
+void Download::initTableView()
 {
     downloadIndex = ui->downloadsTable->rowCount();
 
@@ -186,33 +199,49 @@ void Download::init()
     speedTimer = new QTimer(this);
 
     interval = 1000 / timerCoefficient;
-    kbPerSecVal = 1024 / timerCoefficient;
+    kbPerSec = 1024 / timerCoefficient;
 
-    connect(speedTimer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(speedTimer, SIGNAL(timeout()), this, SLOT(updateTableView()));
 }
 
-void Download::update()
+void Download::updateProgress(qint64 bytesReceived, qint64 bytesTotal)
+{
+    this->bytesReceived = bytesReceived;
+    this->bytesTotal = bytesTotal;
+
+    if(!speedTimer->isActive()) {
+        speedTimer->start(interval);
+    }
+}
+
+void Download::updateTableView()
 {
     ++totalUpdates;
 
     totalSeconds = totalUpdates /  timerCoefficient;
 
-    if(previousBytesReceived != 0)
-        updateControls();
+    if(previousBytesReceived != 0) {
+        qint64  currentSpeedValue = (bytesReceived - previousBytesReceived)  / kbPerSec;
+        qint64  averageSpeedValue = (bytesReceived / totalUpdates)  / kbPerSec;
+        qint64 remainingBytes = bytesTotal  - bytesReceived;
+        qint64 remainingSec = (remainingBytes / kbPerSec) / averageSpeedValue;
+
+        ui->downloadsTable->setItem(downloadIndex, 1, new QTableWidgetItem
+                                    (QString::number(bytesTotal/1048576., 'f', 2) + " Mb"));
+        ui->downloadsTable->setItem(downloadIndex, 2,new QTableWidgetItem
+                                    (QString::number(bytesReceived/1048576., 'f', 2) + " Mb"));
+        ui->downloadsTable->setItem(downloadIndex, 3,new QTableWidgetItem
+                                    (QString::number((double)bytesReceived/
+                                                     (double)bytesTotal * 100, 'f', 2) + "%"));
+        ui->downloadsTable->setItem(downloadIndex, 4,new QTableWidgetItem
+                                    (QString::number(currentSpeedValue) + " Kb/s"));
+        ui->downloadsTable->setItem(downloadIndex, 5,new QTableWidgetItem
+                                    (QString::number(remainingSec) + " sec"));
+    }
 
     previousBytesReceived = bytesReceived;
 }
 
-void Download::updateControls()
-{
-    qint64  currentSpeedValue = (bytesReceived - previousBytesReceived)  / kbPerSecVal;
-    qint64  averageSpeedValue = (bytesReceived / totalUpdates)  / kbPerSecVal;
-    qint64 remainingBytes = bytesTotal  - bytesReceived;
-    qint64 remainingSec = (remainingBytes / kbPerSecVal) / averageSpeedValue;
-
-    ui->downloadsTable->setItem(downloadIndex,1,new QTableWidgetItem(QString::number(bytesTotal)));
-    ui->downloadsTable->setItem(downloadIndex,2,new QTableWidgetItem(QString::number(bytesReceived)));
-    ui->downloadsTable->setItem(downloadIndex,3,new QTableWidgetItem(QString::number((double)bytesReceived/(double)bytesTotal * 100)+"%"));
-    ui->downloadsTable->setItem(downloadIndex,4,new QTableWidgetItem(QString::number(currentSpeedValue)+"kb/s"));
-    ui->downloadsTable->setItem(downloadIndex,5,new QTableWidgetItem(QString::number(remainingSec)+"seconds remain"));
+void Download::setIndex(int index) {
+    downloadIndex = index;
 }

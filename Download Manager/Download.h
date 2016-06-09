@@ -18,8 +18,9 @@ public:
     explicit Download(Ui::MainWindow *ui, QObject *parent = 0);
 
     void run(const QUrl &url, const QString &fileName);
-    void get(const QUrl &url);
+    void stop();
     void cancel();
+    void setIndex(int);
 
 private:
     QFile file;
@@ -27,24 +28,25 @@ private:
     QNetworkRequest request;
     Ui::MainWindow *ui;
 
-    QString fileName;
-    QTimer* speedTimer;
-    int interval;
-    int totalUpdates = 0;
-    qint64 totalSeconds = 0;
-    qint64 bytesReceived;
-    qint64 previousBytesReceived = 0;
-    const qint64 timerCoefficient = 2;
-    double mbTotal = 0.;
-    qint64 kbPerSecVal;
-    qint64 bytesTotal = 0;
-
-    void init();
-    void updateControls();
-    void setProgress(qint64 bytesReceived, qint64 bytesTotal);
-
     int downloadIndex;
 
+    QString fileName;
+
+    QTimer* speedTimer;
+    int interval;
+    qint64 kbPerSec;
+
+    int totalUpdates = 0;
+    qint64 totalSeconds = 0;
+    const qint64 timerCoefficient = 2;
+
+    qint64 bytesReceived;
+    qint64 previousBytesReceived = 0;
+    qint64 bytesTotal = 0;
+
+    void initTableView();
+
+    void get(const QUrl &url);
     void reconnectErrorHandlers();
 
     bool checkFile(const QString &fileName);
@@ -55,13 +57,11 @@ private slots:
     void replyFinished(QNetworkReply*reply);
     void replyReadyRead();
     void resetConnections();
-
     void error(QNetworkReply::NetworkError error);
     void sslErrors(const QList<QSslError> &);
     void authenticationRequired(QNetworkReply*, QAuthenticator*);
-
-    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-    void update();
+    void updateProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void updateTableView();
 };
 
 #endif // DOWNLOAD_H

@@ -1,11 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>Icons/Add.png</file>
-        <file>Icons/Exit.png</file>
         <file>Icons/Icon.png</file>
-        <file>Icons/Info.png</file>
         <file>Icons/Remove.png</file>
-        <file>Icons/Restart.png</file>
         <file>Icons/Stop.png</file>
     </qresource>
 </RCC>

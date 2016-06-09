@@ -16,15 +16,15 @@ TEMPLATE = app
 SOURCES +=\
     MainWindow.cpp \
     Main.cpp \
-    AddUrl.cpp \
-    Download.cpp
+    Download.cpp \
+    AddDownload.cpp
 
 HEADERS  += MainWindow.h \
-    AddUrl.h \
-    Download.h
+    Download.h \
+    AddDownload.h
 
 FORMS    += MainWindow.ui \
-    AddUrl.ui
+    AddDownload.ui
 
 RESOURCES += \
     Icons.qrc

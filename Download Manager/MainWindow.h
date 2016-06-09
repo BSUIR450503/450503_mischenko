@@ -9,13 +9,13 @@ namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
+class Client : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    explicit Client(QWidget *parent = 0);
+    ~Client();
     void startDownload(const QUrl &url, const QString &fileName);
 
 private:
@@ -24,6 +24,8 @@ private:
 
 private slots:
     void addDownload();
+    void stopDownload();
+    void removeDownload();
     void about();
 };
 

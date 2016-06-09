@@ -14,8 +14,7 @@
    <string>Download Manager</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">
-</string>
+   <string notr="true"/>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
@@ -45,8 +44,11 @@
       <property name="sizeAdjustPolicy">
        <enum>QAbstractScrollArea::AdjustToContents</enum>
       </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
       <property name="alternatingRowColors">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="selectionMode">
        <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -58,13 +60,13 @@
        <enum>QAbstractItemView::ScrollPerItem</enum>
       </property>
       <property name="showGrid">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="gridStyle">
-       <enum>Qt::NoPen</enum>
+       <enum>Qt::SolidLine</enum>
       </property>
       <property name="sortingEnabled">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -175,9 +177,6 @@
    <property name="autoFillBackground">
     <bool>false</bool>
    </property>
-   <property name="styleSheet">
-    <string notr="true">background-color: white;</string>
-   </property>
    <property name="locale">
     <locale language="English" country="UnitedStates"/>
    </property>
@@ -204,8 +203,7 @@
    </attribute>
    <addaction name="addToolButton"/>
    <addaction name="stopToolButton"/>
-   <addaction name="restartToolButton"/>
-   <addaction name="pauseToolButton"/>
+   <addaction name="removeToolButton"/>
   </widget>
   <action name="addButton">
    <property name="icon">
@@ -220,10 +218,6 @@
    </property>
   </action>
   <action name="exitButton">
-   <property name="icon">
-    <iconset resource="Icons.qrc">
-     <normaloff>:/Icons/Exit.png</normaloff>:/Icons/Exit.png</iconset>
-   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -232,10 +226,6 @@
    </property>
   </action>
   <action name="aboutButton">
-   <property name="icon">
-    <iconset resource="Icons.qrc">
-     <normaloff>:/Icons/Info.png</normaloff>:/Icons/Info.png</iconset>
-   </property>
    <property name="text">
     <string>About</string>
    </property>
@@ -269,39 +259,23 @@
     <string>Stop Download</string>
    </property>
    <property name="statusTip">
-    <string>Add new download</string>
+    <string>Stop download and remove from list</string>
    </property>
   </action>
-  <action name="pauseToolButton">
+  <action name="removeToolButton">
    <property name="icon">
     <iconset resource="Icons.qrc">
      <normaloff>:/Icons/Remove.png</normaloff>
      <normalon>:/Icons/Icon.ico</normalon>:/Icons/Remove.png</iconset>
    </property>
    <property name="text">
-    <string>Abort Download</string>
+    <string>Remove download</string>
    </property>
    <property name="toolTip">
-    <string>Abort download</string>
+    <string>Remove download</string>
    </property>
    <property name="statusTip">
-    <string>Add new download</string>
-   </property>
-  </action>
-  <action name="restartToolButton">
-   <property name="icon">
-    <iconset resource="Icons.qrc">
-     <normaloff>:/Icons/Restart.png</normaloff>
-     <normalon>:/Icons/Icon.ico</normalon>:/Icons/Restart.png</iconset>
-   </property>
-   <property name="text">
-    <string>Restart Download</string>
-   </property>
-   <property name="toolTip">
-    <string>Abort download</string>
-   </property>
-   <property name="statusTip">
-    <string>Add new download</string>
+    <string>Remove download with file</string>
    </property>
   </action>
  </widget>

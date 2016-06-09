@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AddUrl</class>
- <widget class="QDialog" name="AddUrl">
+ <class>AddDownload</class>
+ <widget class="QDialog" name="AddDownload">
   <property name="geometry">
    <rect>
     <x>0</x>
