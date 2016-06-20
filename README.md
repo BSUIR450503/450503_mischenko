@@ -38,9 +38,9 @@
   - Build and run in Visual Studio.
 
 * Linux
-  - gcc -fPIC -x c -c Library.c
+  - gcc -fPIC -x c -c Library.cpp
   - gcc -shared -o Library.so Library.o -lrt
-  - gcc -x c -o Main Main.c -ldl -pthread -lrt
+  - gcc -x c -o Main Main.cpp -ldl -pthread -lrt
 
 #### <a name="lab6">Lab 6</a>
 * Linux
